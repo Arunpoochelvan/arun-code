@@ -1,0 +1,4 @@
+To convert categorical to numerical:
+
+print (train.apply(lambda x: pd.factorize(x)[0]))
+
