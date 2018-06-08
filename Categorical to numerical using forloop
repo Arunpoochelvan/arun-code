@@ -1,0 +1,100 @@
+# Artificial Neural Network
+
+# Installing Theano
+# pip install --upgrade --no-deps git+git://github.com/Theano/Theano.git
+
+# Installing Tensorflow
+# pip install tensorflow
+
+# Installing Keras
+# pip install --upgrade keras
+
+# Part 1 - Data Preprocessing
+
+# Importing the libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from scipy import stats
+
+# Importing the dataset
+dataset = pd.read_csv("C:/Users/hp/Desktop/TRAIL2.csv")
+dataset_wth_0=dataset.fillna(0)
+test_data=pd.read_csv("C:/Users/hp/Desktop/test.csv")
+#datareader = csv.reader(dataset, delimiter=',', quotechar='"')
+X = dataset_wth_0.iloc[:,0:24].values
+y = dataset_wth_0.iloc[:,-1].values
+#y1=dataset['Decision'].astype('category')
+y=pd.factorize(dataset.Decision)[0] #0-accept,1-reject
+
+
+#X.astype(int)
+#y.astype(float)
+#print(dataset.isna())
+#for row in dataset:
+#    data = dict()
+#    data.update(local_timestamp = row[0])
+#    data.update(nse_timestamp = float(row[1].strip('"')))
+#dataset=int(dataset[:,1])
+# Encoding categorical data
+type(X[: , 9])
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import FunctionTransformer
+transformer = FunctionTransformer(np.log1p)
+
+col_no = [1,2,3,4,5,6,7,9,10,11,12,13,14,15,16,18,19,20,21,22]
+for i in range(X.shape[1]):
+    try:
+        labelencoder_X = LabelEncoder()
+        X[:, i] = labelencoder_X.fit_transform(X[:,i].astype(str))
+    except :
+        print("exception happened")
+        labelencoder_X = LabelEncoder() 
+        X[:, i] = labelencoder_X.fit_transform(X[:,i])
+        
+onehotencoder = OneHotEncoder()
+
+X = onehotencoder.fit_transform(X).toarray()
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+# Feature Scaling
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+
+import keras
+from keras.models import Sequential
+from keras.layers import Dense
+
+# Initialising the ANN
+classifier = Sequential()
+
+# Adding the input layer and the first hidden layer
+classifier.add(Dense(units = 6, kernel_initializer = 'uniform', activation = 'relu', input_dim =589))
+
+# Adding the second hidden layer
+classifier.add(Dense(units = 6, kernel_initializer = 'uniform', activation = 'relu'))
+
+# Adding the output layer
+classifier.add(Dense(units = 1, kernel_initializer = 'uniform', activation = 'sigmoid'))
+
+# Compiling the ANN
+classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+
+# Fitting the ANN to the Training set
+classifier.fit(X_train, y_train, batch_size = 1, epochs = 100)
+
+# Part 3 - Making predictions and evaluating the model
+#str(data_shape)
+# Predicting the Test set results
+y_pred = classifier.predict(X_test)
+y_pred = (y_pred > 0.5)
+
+# Making the Confusion Matrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_pred)
+
